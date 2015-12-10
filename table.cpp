@@ -11,32 +11,6 @@ Table::Table() : rows(ROWS), columns(COLUMNS) {
         for (int j = 0; j < columns; j++)
             elements[i][j] = false;
     
-    elements[3][3] = true;
-    elements[3][4] = true;
-    elements[3][12] = true;
-    elements[3][13] = true;
-    elements[3][21] = true;
-    
-    elements[8][6] = true;
-    elements[8][7] = true;
-    elements[8][10] = true;
-    elements[8][14] = true;
-    elements[8][15] = true;
-    elements[8][18] = true;
-    
-    elements[16][6] = true;
-    elements[16][11] = true;
-    elements[16][16] = true;
-    elements[16][20] = true;
-    
-    elements[21][3] = true;
-    elements[21][4] = true;
-    elements[21][9] = true;
-    elements[21][10] = true;
-    elements[21][15] = true;
-    elements[21][20] = true;
-    elements[21][21] = true;
-    
     int rElements[] = {7, 3, 1, 1, 7, 0, 0, 0, 0,
         1, 1, 2, 2, 1, 1, 0, 0, 0,
         1, 3, 1, 3, 1, 1, 3, 1, 0,
@@ -90,14 +64,30 @@ Table::Table() : rows(ROWS), columns(COLUMNS) {
         1, 1, 2, 2, 2, 6, 1, 0, 0,
         7, 1, 3, 2, 1, 1, 0, 0, 0};
     
-    for (int i = 0; i < rows; i++)
-        for (int j = 0; j < 9; j++)
+    for (int i = 0; i < rows; i++) {
+        blockMoving[i] = 0;
+        for (int j = 0; j < 9; j++) {
             rInfo[i][j] = rElements[(i*9) + j];
+            if (rInfo[i][j] != 0)
+                blockMoving[i]++;
+        }
+    }
     
     for (int i = 0; i < columns; i++)
         for (int j = 0; j < 9; j++)
             cInfo[i][j] = cElements[(i*9) + j];
     
+    
+}
+
+void Table::printRow(int r) {
+    std::cout << "\n|";
+    for (int i = 0; i < 25; i++) {
+        if (elements[r][i])
+            std::cout << "X|";
+        else
+            std::cout << " |";
+    }
 }
 
 void Table::print() {
@@ -209,5 +199,156 @@ bool Table::valid() {
     return true;
 }
 
+bool Table::firstValidRow(int r) {
+    blockMoving[r] = 0;
+    for (int j = 0; j < 9; j++) {
+        if (rInfo[r][j] != 0)
+            blockMoving[r]++;
+    }
+    bool changesMade = false;
+    int numBlocks = 0;
+    while (rInfo[r][numBlocks] != 0)
+        numBlocks++;
+    
+    int position = 0;
+    
+    for (int i = 0; i < numBlocks && position < 25; i++) {
+        for (int j = 0; j < rInfo[r][i] && position < 25; j++) {
+            if (!elements[r][position])
+                changesMade = true;
+            elements[r][position] = true;
+            position++;
+        }
+        if (elements[r][position])
+            changesMade = true;
+        elements[r][position] = false;
+        position++;
+    }
+    while (position < 25) {
+        if (elements[r][position])
+            changesMade = true;
+        elements[r][position] = false;
+        position++;
+    }
+    
+    return changesMade;
+}
 
+void Table::allFirstValidRows() {
+    for (int i = 0; i < rows; i++)
+        firstValidRow(i);
+}
 
+bool Table::shiftByOne(int r, int c) {
+    if (elements[r][columns - 1] == true)
+        return false;
+    for (int i = columns-1; i >= c; i--)
+        elements[r][i] = elements[r][i-1];
+    elements[r][c] = false;
+    return true;
+}
+
+int Table::positionOfMovingBlock(int r) {
+    int position = 0;
+    for (int i = 1; i < blockMoving[r]; i++) {
+        while (position < 24 && elements[r][position] == false)
+            position++;
+        while (position < 24 && elements[r][position] == true)
+            position++;
+    }
+    while (position < 24 && elements[r][position] == false)
+        position++;
+    return position;
+}
+
+bool Table::shiftLeftOne(int r, int c) {
+    if (c == 0 || elements[r][c-1])
+        return false;
+    while (c < 25) {
+        elements[r][c-1] = elements[r][c];
+        c++;
+    }
+    elements[r][columns - 1] = false;
+    return true;
+}
+
+bool Table::resetRow(int r) {
+    int shiftPosition = positionOfMovingBlock(r);
+    while ((blockMoving[r] == 1 && shiftPosition > 0)
+           || (blockMoving[r] > 1
+               && shiftPosition > 2
+               && !elements[r][shiftPosition - 2])) {
+        if (shiftLeftOne(r, shiftPosition)) {
+            shiftPosition--;
+        }
+        else
+            return false;
+    }
+    return true;
+}
+
+bool Table::completeRow(int r) {
+    int position = 0;
+    while (!elements[r][position] && position < 25)
+        position++;
+    for (int i = position; i < 24; i++)
+        if (!elements[r][i] && !elements[r][i+1])
+            return false;
+    return true;
+}
+
+bool Table::nextValidRow(int r) {
+    if (completeRow(r))
+        return false;
+    
+    int shiftPosition = positionOfMovingBlock(r);
+    bool reset = false;
+    while (!shiftByOne(r, shiftPosition)) {
+        reset = true;
+        /*if (completeRow(r))
+            return false;*/
+        while (!resetRow(r)) {
+            blockMoving[r]--;
+        }
+        blockMoving[r]--;
+        shiftPosition = positionOfMovingBlock(r);
+    }
+    if (reset)
+        blockMoving[r]++;
+    return true;
+}
+
+bool Table::matchesTemplate() {
+    return elements[3][3] && elements[3][4] && elements[3][12]
+    && elements[3][13] && elements[3][21] && elements[8][6] && elements[8][7]
+    && elements[8][10] && elements[8][14] && elements[8][15] && elements[8][18]
+    && elements[16][6] && elements[16][11] && elements[16][16] && elements[16]
+    && elements[21][3] && elements[21][4] && elements[21][9] && elements[21][10]
+    && elements[21][15] && elements[21][20] && elements[21][21];
+}
+
+bool Table::solve() {
+    shiftingRow = 24;
+    bool shift = false;
+    while (shiftingRow >= 0 && !(valid() && matchesTemplate())) {
+        while (shiftingRow >= 0 && !nextValidRow(shiftingRow)) {
+            shift = true;
+            if (valid() && matchesTemplate()) {
+                std::cout << "\nPuzzle solved\n";
+                return true;
+            }
+            while (shiftingRow >= 0 && firstValidRow(shiftingRow))
+                shiftingRow--;
+            shiftingRow--;
+        }
+        if (shift) {
+            shiftingRow++;
+            shift = false;
+        }
+    }
+    if (valid() && matchesTemplate()) {
+        std::cout << "\nPuzzle solved\n";
+        return true;
+    }
+    return false;
+}

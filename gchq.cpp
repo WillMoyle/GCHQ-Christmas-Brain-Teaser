@@ -11,21 +11,45 @@
 
 using namespace std;
 
-
-
-
-
 int main() {
     
     Table table;
     
-    table.print();
+    table.allFirstValidRows();
     
-    if (table.valid())
-        std::cout << "\nTable is valid\n";
-    else
-        std::cout << "\nTable is invalid\n";
+    bool test = true;
+    if (test) {
+        table.printRow(22);
+        
+        while (table.nextValidRow(22))
+            table.printRow(22);
         
         
+        if (table.firstValidRow(22)) {
+            cout << "\nReturns true";
+        };
+        table.printRow(22);
+        cout << "\n";
+    }
+    if (test) {
+        table.printRow(22);
+        
+        while (table.nextValidRow(22))
+            table.printRow(22);
+        
+        
+        if (table.firstValidRow(22)) {
+            cout << "\nReturns true";
+        };
+        table.printRow(22);
+        cout << "\n";
+    }
+    else {
+        table.solve();
+        table.print();
+    }
+    
+    cout << "\n\n";
+    
     return 0;
 }
