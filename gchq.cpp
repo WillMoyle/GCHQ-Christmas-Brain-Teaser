@@ -7,12 +7,25 @@
  http://www.gchq.gov.uk/SiteCollectionImages/grid-shading-puzzle.jpg */
 
 #include <iostream>
+#include "table.hpp"
 
 using namespace std;
 
+
+
+
+
 int main() {
     
-    cout << "Hello World!";
+    Table table;
     
+    table.print();
+    
+    if (table.valid())
+        std::cout << "\nTable is valid\n";
+    else
+        std::cout << "\nTable is invalid\n";
+        
+        
     return 0;
 }
