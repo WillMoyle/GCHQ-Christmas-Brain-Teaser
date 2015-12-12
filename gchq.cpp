@@ -17,8 +17,9 @@ int main() {
     
     table.allFirstValidRows();
     
-    bool test = true;
-    if (test) {
+    
+    
+    /*if (test) {
         table.printRow(22);
         
         while (table.nextValidRow(22))
@@ -44,7 +45,7 @@ int main() {
         table.printRow(22);
         cout << "\n";
     }
-    else {
+    else */{
         table.solve();
         table.print();
     }

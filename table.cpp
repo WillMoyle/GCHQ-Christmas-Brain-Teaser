@@ -288,6 +288,8 @@ bool Table::resetRow(int r) {
 }
 
 bool Table::completeRow(int r) {
+    if (!elements[r][columns-1])
+        return false;
     int position = 0;
     while (!elements[r][position] && position < 25)
         position++;
@@ -305,8 +307,6 @@ bool Table::nextValidRow(int r) {
     bool reset = false;
     while (!shiftByOne(r, shiftPosition)) {
         reset = true;
-        /*if (completeRow(r))
-            return false;*/
         while (!resetRow(r)) {
             blockMoving[r]--;
         }
@@ -329,21 +329,17 @@ bool Table::matchesTemplate() {
 
 bool Table::solve() {
     shiftingRow = 24;
-    bool shift = false;
+    bool switchRow = false;
     while (shiftingRow >= 0 && !(valid() && matchesTemplate())) {
+        switchRow = false;
         while (shiftingRow >= 0 && !nextValidRow(shiftingRow)) {
-            shift = true;
-            if (valid() && matchesTemplate()) {
-                std::cout << "\nPuzzle solved\n";
-                return true;
-            }
-            while (shiftingRow >= 0 && firstValidRow(shiftingRow))
+            if (shiftingRow >= 0 && !firstValidRow(shiftingRow))
                 shiftingRow--;
             shiftingRow--;
+            switchRow = true;
         }
-        if (shift) {
+        if (switchRow) {
             shiftingRow++;
-            shift = false;
         }
     }
     if (valid() && matchesTemplate()) {
